@@ -7,5 +7,7 @@
 {% include "/ios/interfaces/_router_physical.j2"%}
 {% elif role["name"] == "Customer Edge Router" %}
 {% include "/ios/interfaces/_router_physical.j2"%}
+{% elif role["name"] == "Provider Route Reflector" %}
+{% include "/ios/interfaces/_router_physical.j2"%}
 {% endif %}
 {% endfor %}
