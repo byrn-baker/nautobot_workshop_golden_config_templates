@@ -2,7 +2,7 @@
 interface {{ interface["name"]["split"]('.')[0] }}
 {% if interface["description"] | length > 1 %}
  description {{ interface.description }}
-{% elif interface["connected_interface"]["device"]["name"] is defined %}
+{% elif interface.connected_interface is defined and interface.connected_interface and interface.connected_interface.device is defined and interface.connected_interface.device.name is defined %}
   description To {{ interface["connected_interface"]["device"]["name"] }}-{{ interface["connected_interface"]["name"] }}
 {% endif %}
 {% if interface["ip_addresses"] | length > 1 %}
