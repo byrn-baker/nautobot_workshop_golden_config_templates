@@ -2,6 +2,8 @@
 interface {{ interface.name }}
 {% if interface.description | length > 1 %}
  description {{ interface.description }}
+{% else %}
+ description Protocal Loopback
 {% endif %}
 {% set valid_addrs = interface.ip_addresses | selectattr("address", "defined") | list %}
 {% if valid_addrs | length > 0 %}
