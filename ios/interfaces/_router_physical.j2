@@ -21,10 +21,12 @@ interface {{ interface["name"]["split"]('.')[0] }}
 {% elif interface["mgmt_only"] == True %}
 interface {{ interface["name"] }}
 {% if interface["description"] | length > 1 %}
- description {{ interface["description"] }}    
+ description {{ interface["description"] }}
+{% else %}
+ description MGMT ONLY INTERFACE   
 {% endif %}
  vrf forwarding clab-mgmt
-{% if interface["ip_addresses"] | length > 1 %}
+{% if interface["ip_addresses"] | length > 0 %}
 {% for addr in interface["ip_addresses"] %}
 {% if addr["address"] is defined %}
  ip address {{ addr["address"] | ipv4_address }} {{ addr.address | netmask }}
