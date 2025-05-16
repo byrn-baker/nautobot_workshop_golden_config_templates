@@ -4,4 +4,6 @@
 {% include "/ios/platform_templates/provider_edge_router.j2" %}
 {% elif role["name"] == "Customer Edge Router" %}
 {% include "/ios/platform_templates/customer_edge_router.j2" %}
+{% elif role["name"] == "Provider Router Reflector" %}
+{% include "/ios/platform_templates/provider_route_reflector.j2" %}
 {% endif %}
