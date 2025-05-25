@@ -93,7 +93,7 @@ ip ssh bulk-mode 131072
 !
 ipv6 route vrf clab-mgmt ::/0 Ethernet0/0
 !
-{% if config_context['mpls']['enabled'] is defined and device['config_context']['mpls']['enabled'] == True %}
+{% if config_context['mpls']['enabled'] is defined and config_context['mpls']['enabled'] == True %}
 mpls ip
 {% endif %}
 !
