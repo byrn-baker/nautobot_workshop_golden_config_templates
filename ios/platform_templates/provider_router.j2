@@ -39,7 +39,9 @@ login on-success log
 ipv6 unicast-routing
 ipv6 cef
 !
-!
+{% if config_context['mpls']['enabled'] is defined and config_context['mpls']['enabled'] == True %}
+mpls ip
+{% endif %}
 !
 !
 !
