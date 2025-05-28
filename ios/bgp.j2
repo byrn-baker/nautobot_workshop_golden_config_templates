@@ -1,5 +1,31 @@
 {% for instance in bgp_routing_instances %}
-{% for peer in instance["endpoints"] %}
-neighbor {{ peer["source_ip"]["address"] | ipaddr('address') }} remote-as {{ peer["autonomous_system"]["asn"] }}
+router bgp {{ instance.autonomous_system.asn }}
+ bgp log-neighbor-changes
+
+{% for ep in instance.endpoints %}
+{% set peer = ep.peer %}
+{% set peer_ip = peer.source_ip.address | ipaddr('address') %}
+{% set peer_asn = peer.autonomous_system.asn %}
+{% set peer_desc = peer.description %}
+{% if peer_desc %}
+ neighbor {{ peer_ip }} description {{ peer_desc }}
+{% endif %}
+ neighbor {{ peer_ip }} remote-as {{ peer_asn }}
 {% endfor %}
+
+{% for afi in instance.address_families %}
+ address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi.afi_safi else 'ipv6' }} unicast
+{% if afi.extra_attributes is defined and afi.extra_attributes is not none %}
+{% for redist in afi.extra_attributes.redistribute %}
+  redistribute {{ redist }}
+{% endfor %}
+{% endif %}
+{% for ep in instance.endpoints %}
+{% set peer_ip = ep.peer.source_ip.address | ipaddr('address') %}
+  neighbor {{ peer_ip }} activate
+{% endfor %}
+ exit-address-family
+{% endfor %}
+
+!
 {% endfor %}
