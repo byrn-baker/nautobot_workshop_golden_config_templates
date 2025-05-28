@@ -107,7 +107,7 @@ mpls ip
 {% include '/ios/mpls.j2' %}
 {% endif %}
 !
-{% if bgp_routing_instances is defined and not null %}
+{% if bgp_routing_instances is defined and bgp_routing_instances is not none %}
 {% include '/ios/bgp.j2' %}
 {% endif %}
 !
