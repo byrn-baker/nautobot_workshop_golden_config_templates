@@ -1,7 +1,6 @@
 {% for instance in bgp_routing_instances %}
 router bgp {{ instance.autonomous_system.asn }}
  bgp log-neighbor-changes
-
 {# Configure all neighbors #}
 {% for ep in instance.endpoints %}
 {% set peer = ep.peer %}
@@ -13,7 +12,6 @@ router bgp {{ instance.autonomous_system.asn }}
 {% endif %}
  neighbor {{ peer_ip }} remote-as {{ peer_asn }}
 {% endfor %}
-
 {# Address-family level config #}
 {% for afi in instance.address_families %}
  address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi.afi_safi else 'ipv6' }} unicast
@@ -22,7 +20,6 @@ router bgp {{ instance.autonomous_system.asn }}
   redistribute {{ redist }}
 {% endfor %}
 {% endif %}
-
 {# Per-neighbor address-family settings #}
 {% for ep in instance.endpoints %}
 {% set peer = ep.peer %}
