@@ -107,6 +107,10 @@ mpls ip
 {% include '/ios/mpls.j2' %}
 {% endif %}
 !
+{% if bgp_routing_instances is defined and not null %}
+{% include '/ios/bgp.j2' %}
+{% endif %}
+!
 control-plane
 !
 !
