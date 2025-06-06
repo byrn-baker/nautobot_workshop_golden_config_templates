@@ -4,9 +4,7 @@ interface {{ interface.name }}
 {% else %}
  description Protocol Loopback
 {% endif %}
-
 {% set valid_addrs = interface.ip_addresses | selectattr("address", "defined") | list %}
-
 {% if valid_addrs | length > 0 %}
 {% for addr in valid_addrs %}
 {% if '.' in addr["address"] %}
