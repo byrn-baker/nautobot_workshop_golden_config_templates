@@ -5,7 +5,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
   router-id {{ loopback_ip }}
   no bgp default ipv4-unicast
   maximum-paths 4 ecmp 4
-  {# -- Peer-group definitions -- #}
+{# -- Peer-group definitions -- #}
 {% for pg in instance['peer_groups'] %}
   neighbor {{ pg['name'] }} peer group
 {% if pg.get('source_interface') %}
@@ -33,7 +33,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
   neighbor {{ pg['name'] }} password 7 {{ pg['secret']['name'] }}
 {% endif %}
 {% endfor %}
-  {# -- Neighbor IP bindings -- #}
+{# -- Neighbor IP bindings -- #}
 {% for ep in instance['endpoints'] %}
 {% set peer_ip = ep['peer']['source_ip']['address'] | ipaddr('address') %}
 {% set peer_group = ep.get('peer_group') and ep['peer_group'].get('name') %}
@@ -51,7 +51,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% endfor %}
   redistribute connected route-map RM-CONN-2-BGP
   !
-  {# -- Address-family activation -- #}
+{# -- Address-family activation -- #}
 {% set afi_map = {
     'IPV4_UNICAST': 'ipv4',
     'IPV6_UNICAST': 'ipv6',
