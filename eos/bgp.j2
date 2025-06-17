@@ -65,7 +65,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% for vlan in location.parent.vlans %}
 {% if "MLAG" not in vlan.name %}
   vlan {{ vlan['vid'] }} 
-    rd {{ loopback_ip }}:{{ "%04d" | format(vlan['vid']) }}
+    rd {{ loopback_ip }}:1{{ "%04d" | format(vlan['vid']) }}
     route-target both 1{{ "%04d" | format(vlan['vid']) }}:1{{ "%04d" | format(vlan['vid']) }}
     redistribute learned
 {% endif %}
