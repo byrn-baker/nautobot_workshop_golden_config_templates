@@ -30,7 +30,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
   neighbor {{ pg['name'] }} maximum-routes {{ pg['extra_attributes']['maximum-routes'] }}
 {% endif %}
 {% if pg.get('secret') and pg['secret'].get('name') %}
-  neighbor {{ pg['name'] }} password 7 {{ pg['secret']['name'] }}
+  neighbor {{ pg['name'] }} password 7 {{ pg['secret']['name'] | arista.avd.encrypt(passwd_type='bgp', key=pg['name']) }}
 {% endif %}
 {% endfor %}
 {# -- Neighbor IP bindings -- #}
