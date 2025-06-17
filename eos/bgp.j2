@@ -82,7 +82,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% for ep in instance['endpoints'] %}
 {% set peer = ep['peer'] %}
 {% set peer_ip = peer['source_ip']['address'] | ipaddr('address') %}
-{% for af in peer['address_families'] %}
+{% for af in peer.get('address_families', []) %}
 {% if afi_map.get(af['afi_safi']) == afi_safi %}
     neighbor {{ peer_ip }} activate
 {% if af.get('import_policy') %}
