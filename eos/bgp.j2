@@ -63,6 +63,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% set ordered_afi_codes = ['L2_EVPN', 'IPV4_UNICAST', 'IPV6_UNICAST'] %}
 {% for afi_code in ordered_afi_codes if afi_code in all_afis %}
 {% set afi_safi = afi_map.get(afi_code) %}
+  address-family {{ afi_safi }}
 {% for pg in instance['peer_groups'] %}
 {% set match = pg['address_families'] | selectattr('afi_safi', 'equalto', afi_code) | list %}
 {% if match | length > 0 %}
