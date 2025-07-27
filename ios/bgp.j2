@@ -5,7 +5,9 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {# Declare peer-groups #}
 {% for pg in instance.get('peer_groups', []) %}
  neighbor {{ pg['name'] }} peer-group
+{% if pg.autonomous_system is defined and pg.autonomous_system %}
  neighbor {{ pg['name'] }} remote-as {{ pg['autonomous_system']['asn'] }}
+{% endif %}
 {% endfor %}
 {# Define neighbor-to-peer-group or remote-as #}
 {% for ep in instance['endpoints'] %}
