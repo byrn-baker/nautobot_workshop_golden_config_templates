@@ -1,120 +1,99 @@
 {% for instance in bgp_routing_instances %}
-router bgp {{ instance['autonomous_system']['asn'] }}
+router bgp {{ instance.autonomous_system.asn }}
  bgp log-neighbor-changes
  no bgp default ipv4-unicast
 
 {# Declare peer-groups #}
 {% for pg in instance.get('peer_groups', []) %}
- neighbor {{ pg['name'] }} peer-group
+ neighbor {{ pg.name }} peer-group
 {% if pg.autonomous_system is defined and pg.autonomous_system %}
- neighbor {{ pg['name'] }} remote-as {{ pg['autonomous_system']['asn'] }}
+ neighbor {{ pg.name }} remote-as {{ pg.autonomous_system.asn }}
 {% endif %}
 {% endfor %}
 
 {# Define neighbor-to-peer-group or remote-as #}
-{% for ep in instance['endpoints'] %}
-{% set peer = ep['peer'] %}
-{% set peer_ip = peer['source_ip']['address'] | ipaddr('address') %}
-{% set peer_int = ep['source_interface']['name'] %}
+{% for ep in instance.endpoints %}
+{% set peer = ep.peer %}
+{% set peer_ip = peer.source_ip.address | ipaddr('address') %}
+{% set peer_int = ep.source_interface.name %}
 {% set peer_group = ep.get('peer_group') %}
 {% if peer_group %}
- neighbor {{ peer_ip }} peer-group {{ peer_group['name'] }}
+ neighbor {{ peer_ip }} peer-group {{ peer_group.name }}
 {% else %}
 {% set peer_asn = None %}
-{% if peer.get('autonomous_system') %}
-{% set peer_asn = peer['autonomous_system']['asn'] %}
-{% elif peer.get('routing_instance') and peer['routing_instance'].get('autonomous_system') %}
-{% set peer_asn = peer['routing_instance']['autonomous_system']['asn'] %}
+{% if peer.autonomous_system %}
+{% set peer_asn = peer.autonomous_system.asn %}
+{% elif peer.routing_instance and peer.routing_instance.autonomous_system %}
+{% set peer_asn = peer.routing_instance.autonomous_system.asn %}
 {% endif %}
  neighbor {{ peer_ip }} remote-as {{ peer_asn }}
 {% endif %}
-{% if ep.get('description') %}
- neighbor {{ peer_ip }} description {{ ep['description'] }}
+{% if ep.description %}
+ neighbor {{ peer_ip }} description {{ ep.description }}
 {% endif %}
 {% if 'Loopback' in peer_int %}
  neighbor {{ peer_ip }} update-source {{ peer_int }}
 {% endif %}
 {% endfor %}
 
-{# Determine unique AFIs used #}
+{# Build list of AFIs from peer groups only #}
 {% set afis = [] %}
-
-{# 1. Gather from peer groups #}
 {% for pg in instance.get('peer_groups', []) %}
-  {% if pg.address_families is defined %}
-    {% for af in pg.address_families %}
-      {% if af.afi_safi is defined and af.afi_safi not in afis %}
-        {% set afis = afis + [af.afi_safi] %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
+  {% for af in pg.get('address_families', []) %}
+    {% if af.get('afi_safi') and af.afi_safi not in afis %}
+      {% set afis = afis + [af.afi_safi] %}
+    {% endif %}
+  {% endfor %}
 {% endfor %}
 
-{# 2. Gather from endpoints #}
-{% for ep in instance.get('endpoints', []) %}
-  {% if ep.peer is defined and ep.peer.address_families is defined %}
-    {% for af in ep.peer.address_families %}
-      {% if af.afi_safi is defined and af.afi_safi not in afis %}
-        {% set afis = afis + [af.afi_safi] %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-{% endfor %}
-
-{# Address-family config #}
+{# Address-family config per AFI #}
 {% for afi in afis %}
 address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
 
-{# 1. Peer-group AF-level config including extra attributes #}
-{% for pg in instance.get('peer_groups', []) %}
-{% for pg_af in pg.get('address_families', []) %}
-{% if pg_af['afi_safi'] == afi %}
- neighbor {{ pg['name'] }} activate
-{% if pg_af.get('import_policy') %}
- neighbor {{ pg['name'] }} route-map {{ pg_af['import_policy'] }} in
-{% endif %}
-{% if pg_af.get('export_policy') %}
- neighbor {{ pg['name'] }} route-map {{ pg_af['export_policy'] }} out
-{% endif %}
-{% if pg_af.get('extra_attributes') %}
-{# Loop through all extra attributes (boolean flags or string options) #}
-{% for key, value in pg_af.extra_attributes.items() %}
-          {% if value is sameas true %}
- neighbor {{ pg['name'] }} {{ key }}
-          {% elif value is string %}
- neighbor {{ pg['name'] }} {{ key }} {{ value }}
-          {% endif %}
-{% endfor %}
-{% endif %}
-{% endif %}
-{% endfor %}
-{% endfor %}
+  {# Peer group AF-level config including import/export policies #}
+  {% for pg in instance.get('peer_groups', []) %}
+    {% for pg_af in pg.get('address_families', []) %}
+      {% if pg_af.get('afi_safi') == afi %}
+ neighbor {{ pg.name }} activate
+ {% if pg_af.import_policy %}
+ neighbor {{ pg.name }} route-map {{ pg_af.import_policy }} in
+ {% endif %}
+ {% if pg_af.export_policy %}
+ neighbor {{ pg.name }} route-map {{ pg_af.export_policy }} out
+ {% endif %}
+ {% if pg_af.extra_attributes %}
+   {% for key, value in pg_af.extra_attributes.items() %}
+     {% if value is sameas true %}
+ neighbor {{ pg.name }} {{ key }}
+     {% elif value is string %}
+ neighbor {{ pg.name }} {{ key }} {{ value }}
+     {% endif %}
+   {% endfor %}
+ {% endif %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
 
-{# 2. Per-neighbor config for non-peer-group endpoints #}
-{% for ep in instance['endpoints'] %}
-{% set peer = ep['peer'] %}
-{% set peer_ip = peer['source_ip']['address'] | ipaddr('address') %}
-{% set peer_group = ep.get('peer_group') %}
-{% set is_ipv6 = ":" in peer_ip %}
-{% set af_type = 'IPV6_UNICAST' if is_ipv6 else 'IPV4_UNICAST' %}
-{% if af_type == afi %}
-{% if not peer_group %}
-{% for af in peer.get('address_families', []) %}
-{% if af['afi_safi'] == afi %}
+  {# Per-neighbor config for endpoints NOT in peer groups #}
+  {% for ep in instance.endpoints %}
+    {% set peer_ip = ep.peer.source_ip.address | ipaddr('address') %}
+    {% set is_ipv6 = ':' in peer_ip %}
+    {% set ep_afi = 'IPV6_UNICAST' if is_ipv6 else 'IPV4_UNICAST' %}
+    {% if ep_afi == afi and not ep.get('peer_group') %}
  neighbor {{ peer_ip }} activate
-{% if af.get('import_policy') %}
- neighbor {{ peer_ip }} route-map {{ af['import_policy'] }} in
-{% endif %}
-{% if af.get('export_policy') %}
- neighbor {{ peer_ip }} route-map {{ af['export_policy'] }} out
-{% endif %}
-{% endif %}
-{% endfor %}
-{% else %}
- neighbor {{ peer_ip }} activate
-{% endif %}
-{% endif %}
-{% endfor %}
+ {# Apply import/export policies if they exist on endpoint peer AFI (rare in your data) #}
+ {% for af in ep.peer.address_families %}
+   {% if af.afi_safi == afi %}
+     {% if af.import_policy %}
+ neighbor {{ peer_ip }} route-map {{ af.import_policy }} in
+     {% endif %}
+     {% if af.export_policy %}
+ neighbor {{ peer_ip }} route-map {{ af.export_policy }} out
+     {% endif %}
+   {% endif %}
+ {% endfor %}
+    {% endif %}
+  {% endfor %}
 
 exit-address-family
 {% endfor %}
