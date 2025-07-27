@@ -2,6 +2,7 @@
 router bgp {{ instance['autonomous_system']['asn'] }}
  bgp log-neighbor-changes
  no bgp default ipv4-unicast
+
 {# Declare peer-groups #}
 {% for pg in instance.get('peer_groups', []) %}
  neighbor {{ pg['name'] }} peer-group
@@ -9,6 +10,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
  neighbor {{ pg['name'] }} remote-as {{ pg['autonomous_system']['asn'] }}
 {% endif %}
 {% endfor %}
+
 {# Define neighbor-to-peer-group or remote-as #}
 {% for ep in instance['endpoints'] %}
 {% set peer = ep['peer'] %}
@@ -33,29 +35,36 @@ router bgp {{ instance['autonomous_system']['asn'] }}
  neighbor {{ peer_ip }} update-source {{ peer_int }}
 {% endif %}
 {% endfor %}
-{# Start with empty afi list #}
+
+{# Determine unique AFIs used #}
 {% set afis = [] %}
-{# Gather AFIs from peer_groups #}
+
+{# 1. Gather from peer groups #}
 {% for pg in instance.get('peer_groups', []) %}
-{% for af in pg.get('address_families', []) %}
-{% if af.afi_safi is defined and af.afi_safi not in afis %}
-    {% set afis = afis + [af.afi_safi] %}
-{% endif %}
+  {% if pg.address_families is defined %}
+    {% for af in pg.address_families %}
+      {% if af.afi_safi is defined and af.afi_safi not in afis %}
+        {% set afis = afis + [af.afi_safi] %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 {% endfor %}
-{% endfor %}
-{# Gather AFIs from endpoints #}
+
+{# 2. Gather from endpoints #}
 {% for ep in instance.get('endpoints', []) %}
-{% if ep.peer is defined and ep.peer.address_families is defined %}
-{% for af in ep.peer.address_families %}
-{% if af.afi_safi is defined and af.afi_safi not in afis %}
-{% set afis = afis + [af.afi_safi] %}
-{% endif %}
+  {% if ep.peer is defined and ep.peer.address_families is defined %}
+    {% for af in ep.peer.address_families %}
+      {% if af.afi_safi is defined and af.afi_safi not in afis %}
+        {% set afis = afis + [af.afi_safi] %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 {% endfor %}
-{% endif %}
-{% endfor %}
+
 {# Address-family config #}
 {% for afi in afis %}
 address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
+
 {# 1. Peer-group AF-level config including extra attributes #}
 {% for pg in instance.get('peer_groups', []) %}
 {% for pg_af in pg.get('address_families', []) %}
@@ -72,14 +81,15 @@ address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
 {% for key, value in pg_af.extra_attributes.items() %}
           {% if value is sameas true %}
  neighbor {{ pg['name'] }} {{ key }}
-{% elif value is string %}
+          {% elif value is string %}
  neighbor {{ pg['name'] }} {{ key }} {{ value }}
-{% endif %}
+          {% endif %}
 {% endfor %}
 {% endif %}
 {% endif %}
 {% endfor %}
 {% endfor %}
+
 {# 2. Per-neighbor config for non-peer-group endpoints #}
 {% for ep in instance['endpoints'] %}
 {% set peer = ep['peer'] %}
@@ -105,6 +115,7 @@ address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
 {% endif %}
 {% endif %}
 {% endfor %}
+
 exit-address-family
 {% endfor %}
 !
