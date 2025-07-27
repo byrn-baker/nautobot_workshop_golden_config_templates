@@ -1,4 +1,3 @@
-{% set afis = '' %}
 {% for instance in bgp_routing_instances %}
 router bgp {{ instance['autonomous_system']['asn'] }}
  bgp log-neighbor-changes
@@ -31,23 +30,23 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% endif %}
 {% endfor %}
 {# Determine unique AFIs used #}
+{% set afis = [] %}
 {% for pg in instance.get('peer_groups', []) %}
 {% for af in pg.get('address_families', []) %}
 {% if af['afi_safi'] not in afis %}
-{% set afis = afis + ',' + af['afi_safi'] %}
+{% do afis.append(af['afi_safi']) %}
 {% endif %}
 {% endfor %}
 {% endfor %}
 {% for ep in instance['endpoints'] %}
 {% for af in ep['peer'].get('address_families', []) %}
 {% if af['afi_safi'] not in afis %}
-{% set afis = afis + ',' + af['afi_safi'] %}
+{% do afis.append(af['afi_safi']) %}
 {% endif %}
 {% endfor %}
 {% endfor %}
 {# Address-family config #}
-{% set afis_list = afis.split(",") %}
-{% for afi in afis_list %}
+{% for afi in afis %}
 address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
 {# 1. Peer-group AF-level config including extra attributes #}
 {% for pg in instance.get('peer_groups', []) %}
@@ -63,7 +62,7 @@ address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
 {% if pg_af.get('extra_attributes') %}
 {# Loop through all extra attributes (boolean flags or string options) #}
 {% for key, value in pg_af.extra_attributes.items() %}
-{% if value is sameas true %}
+          {% if value is sameas true %}
  neighbor {{ pg['name'] }} {{ key }}
 {% elif value is string %}
  neighbor {{ pg['name'] }} {{ key }} {{ value }}
