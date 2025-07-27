@@ -32,21 +32,26 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% endif %}
 {% endfor %}
 {# Determine unique AFIs used #}
-{% set afis = [] %}
-{% for pg in instance.get('peer_groups', []) %}
-{% for af in pg.get('address_families', []) %}
-{% if af['afi_safi'] not in afis %}
-{% do afis.append(af['afi_safi']) %}
-{% endif %}
-{% endfor %}
-{% endfor %}
-{% for ep in instance['endpoints'] %}
-{% for af in ep['peer'].get('address_families', []) %}
-{% if af['afi_safi'] not in afis %}
-{% do afis.append(af['afi_safi']) %}
-{% endif %}
-{% endfor %}
-{% endfor %}
+{# Extract AFIs from peer groups #}
+{% set pg_afis = instance.get('peer_groups', []) 
+    | map(attribute='address_families') 
+    | select('defined') 
+    | map('flatten') 
+    | select('defined') 
+    | map(attribute='afi_safi') 
+    | list %}
+{# Extract AFIs from endpoints #}
+{% set ep_afis = instance.get('endpoints', []) 
+    | map(attribute='peer') 
+    | select('defined') 
+    | map(attribute='address_families') 
+    | select('defined') 
+    | map('flatten') 
+    | select('defined') 
+    | map(attribute='afi_safi') 
+    | list %}
+{# Union both and deduplicate #}
+{% set afis = (pg_afis + ep_afis) | unique | list %}
 {# Address-family config #}
 {% for afi in afis %}
 address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
