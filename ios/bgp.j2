@@ -42,6 +42,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% for af in ep['peer'].get('address_families', []) %}
 {% if af['afi_safi'] not in afis %}
 {% set afis|default([])|append(af['afi_safi']) %}
+{% endset %}
 {% endif %}
 {% endfor %}
 {% endfor %}
