@@ -34,14 +34,14 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% for pg in instance.get('peer_groups', []) %}
 {% for af in pg.get('address_families', []) %}
 {% if af['afi_safi'] not in afis %}
-{% do afis.append(af['afi_safi']) %}
+{% set afis|default([])|append(af['afi_safi']) %}
 {% endif %}
 {% endfor %}
 {% endfor %}
 {% for ep in instance['endpoints'] %}
 {% for af in ep['peer'].get('address_families', []) %}
 {% if af['afi_safi'] not in afis %}
-{% do afis.append(af['afi_safi']) %}
+{% set afis|default([])|append(af['afi_safi']) %}
 {% endif %}
 {% endfor %}
 {% endfor %}
