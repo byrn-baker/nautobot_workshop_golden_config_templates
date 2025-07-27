@@ -13,6 +13,7 @@ interface {{ interface.name }}
  ipv6 address {{ addr["address"] }}
 {% endif %}
 {% endfor %}
+    {# OSPF configuration if relevant #}
 {% if 'ospf' in config_context and interface['cf_ospf_area'] is not none %}
 {% set ospf = config_context['ospf'] %}
 {% if 'ipv4' in ospf %}
