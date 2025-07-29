@@ -30,14 +30,14 @@ interface {{ interface.name }}
 {% if interface.cf_vrrp_group_id is defined and interface.cf_vrrp_group_id is not none %}
 {% for addr in valid_addrs %}
 {% if '.' in addr["address"] %}
-{% set gateway4 = addr["address"] | ansible.utils.ipaddr('1') %}
-    vrrp {{ interface.cf_vrrp_group_id }} ipv4 {{ gateway4 | ansible.utils.ipv4('address') }}
+{% set gateway4 = addr["address"] | ipaddr('1') %}
+    vrrp {{ interface.cf_vrrp_group_id }} ipv4 {{ gateway4 | ipv4('address') }}
 {% endif %}
 {% endfor %}
 {% for addr in valid_addrs %}
 {% if ':' in addr["address"] %}
-{% set gateway6 = addr["address"] | ansible.utils.ipaddr('1') %}
-    vrrp {{ interface.cf_vrrp_group_id }} ipv6 {{ gateway6 | ansible.utils.ipv6('address') }}
+{% set gateway6 = addr["address"] | ipaddr('1') %}
+    vrrp {{ interface.cf_vrrp_group_id }} ipv6 {{ gateway6 | ipv6('address') }}
 {% endif %}
 {% endfor %}
 {% if interface.cf_vrrp_disabled %}
