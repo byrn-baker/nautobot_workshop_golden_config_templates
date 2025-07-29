@@ -11,6 +11,6 @@ interface {{ interface["name"] }}
     ip address {{ addr["address"] | ipaddr('address') }} {{ addr.address | ipaddr('netmask') }}
     no shutdown
 !
-        {% endif %}
-    {% endfor %}
+{% endif %}
+{% endfor %}
 {% endif %}
