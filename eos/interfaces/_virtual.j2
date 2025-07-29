@@ -31,13 +31,13 @@ interface {{ interface.name }}
 {% for addr in valid_addrs %}
 {% if '.' in addr["address"] %}
 {% set gateway4 = addr["address"] | ipaddr('1') %}
-    vrrp {{ interface.cf_vrrp_group_id }} ipv4 {{ gateway4 | ipv4('address') }}
+    vrrp {{ interface.cf_vrrp_group_id }} ipv4 {{ gateway4 | ipaddr('address') }}
 {% endif %}
 {% endfor %}
 {% for addr in valid_addrs %}
 {% if ':' in addr["address"] %}
 {% set gateway6 = addr["address"] | ipaddr('1') %}
-    vrrp {{ interface.cf_vrrp_group_id }} ipv6 {{ gateway6 | ipv6('address') }}
+    vrrp {{ interface.cf_vrrp_group_id }} ipv6 {{ gateway6 | ipaddr('address') }}
 {% endif %}
 {% endfor %}
 {% if interface.cf_vrrp_disabled %}
