@@ -73,7 +73,6 @@ address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
 {% endif %}
 {% endfor %}
 {% endfor %}
-!
 {# 2. Per-neighbor config for non-peer-group endpoints #}
 {% for ep in instance['endpoints'] %}
 {% set peer = ep['peer'] %}
@@ -100,6 +99,7 @@ address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
 {% endif %}
 {% endfor %}
 exit-address-family
+!
 {% endfor %}
 !
 {% endfor %}
