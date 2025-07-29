@@ -6,8 +6,8 @@ interface {{ interface["name"] }}
 {% endif %}
     vrf forwarding clab-mgmt
 {% if interface["ip_addresses"] | length > 0 %}
-    {% for addr in interface["ip_addresses"] %}
-        {% if addr["address"] is defined %}
+{% for addr in interface["ip_addresses"] %}
+{% if addr["address"] is defined %}
     ip address {{ addr["address"] | ipaddr('address') }} {{ addr.address | ipaddr('netmask') }}
     no shutdown
 !
