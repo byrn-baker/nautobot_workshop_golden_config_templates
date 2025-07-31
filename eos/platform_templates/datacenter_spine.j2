@@ -1,5 +1,4 @@
 !
-no enable password
 no aaa root
 !
 username admin privilege 15 role network-admin secret sha512 $6$vIVWaFAwuNl0Sn3q$krPseqSsELzdlHp7X3fMqQtoLTlRUgbHZAdTWEwMDSDqFOk3iKC3g2j/6BofhI9CV706VkKTr7GSst9.trUH21
@@ -19,7 +18,19 @@ service routing protocols model multi-agent
 !
 hostname {{ hostname }}
 !
-spanning-tree mode none
+spanning-tree mode mstp
+no spanning-tree vlan-id 4093-4094
+spanning-tree mst 0 priority 4096
+!
+{% set h = item.name | hash('md5') %}
+{% set mac = "00:1a:73" %}
+{% set raw = h[0:2] %}
+{% set raw_int = raw | int(base=16) %}
+{% set cleaned = (raw_int // 4) * 4 %} {# clears the last 2 bits (U/L and I/G) #}
+{% set suffix1 = "%02x" % cleaned %}
+{% set suffix2 = h[2:4] %}
+{% set suffix3 = h[4:6] %}
+system mac-address {{ mac }}:{{ suffix1 }}:{{ suffix2 }}:{{ suffix3 }}
 !
 system l1
    unsupported speed action error
@@ -28,14 +39,15 @@ system l1
 vrf instance clab-mgmt
    description clab-mgmt
 !
-management api http-commands
-   protocol https
-   no shutdown
-   !
-   vrf clab-mgmt
-       no shutdown
+management api gnmi
+   transport grpc default
+!
+management api netconf
+   transport ssh default
 !
 {% include '/eos/interfaces.j2' %}
+!
+ip virtual-router mac-address {{ config_context['mlag_domain_id'] }}
 !
 ip routing
 ip routing vrf clab-mgmt
@@ -43,6 +55,8 @@ ip routing vrf clab-mgmt
 {% if config_context['prefix_lists'] is defined %}
 {% include '/eos/prefix_list.j2' %}
 {% endif %}
+!
+{% include '/eos/mlag_config.j2' %}
 !
 ip route vrf clab-mgmt 0.0.0.0/0 Management0 192.168.220.1
 !
@@ -63,5 +77,9 @@ router multicast
    !
    ipv6
       software-forwarding kernel
+!
+management ssh
+   vrf clab-mgmt
+      no shutdown
 !
 end
