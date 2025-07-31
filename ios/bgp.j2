@@ -48,7 +48,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 !
 {# Address-family config #}
 {% for afi in afis %}
-address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
+address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }}
 {# 1. Peer-group AF-level config including extra attributes #}
 {% for pg in instance.get('peer_groups', []) %}
 {% for pg_af in pg.get('address_families', []) %}
@@ -63,7 +63,7 @@ address-family {{ 'ipv4' if 'IPV4_UNICAST' in afi else 'ipv6' }} unicast
 {% if pg_af.get('extra_attributes') %}
 {# Loop through all extra attributes (boolean flags or string options) #}
 {% for key, value in pg_af.extra_attributes.items() %}
-          {% if value is sameas true %}
+{% if value is sameas true %}
  neighbor {{ pg['name'] }} {{ key }}
 {% elif value is string %}
  neighbor {{ pg['name'] }} {{ key }} {{ value }}
