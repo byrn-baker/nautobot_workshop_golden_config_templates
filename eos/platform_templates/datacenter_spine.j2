@@ -47,8 +47,6 @@ management api netconf
 !
 {% include '/eos/interfaces.j2' %}
 !
-ip virtual-router mac-address {{ config_context['mlag_domain_id'] }}
-!
 ip routing
 ip routing vrf clab-mgmt
 !
