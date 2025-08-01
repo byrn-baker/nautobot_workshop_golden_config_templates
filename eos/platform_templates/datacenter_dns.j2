@@ -20,7 +20,7 @@ hostname {{ hostname }}
 !
 spanning-tree mode none
 !
-{% set h = item.name | hash('md5') %}
+{% set h = hostname | hash('md5') %}
 {% set mac = "00:1a:73" %}
 {% set raw = h[0:2] %}
 {% set raw_int = raw | int(base=16) %}
