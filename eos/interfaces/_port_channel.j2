@@ -38,7 +38,6 @@ interface {{ interface.name }}
 {% elif interface.mode == "TAGGED_ALL" %}
    switchport mode trunk
 {% elif interface.mode == "ACCESS" %}
-   switchport mode access
 {% if interface.untagged_vlan.vid is defined %}
    switch access vlan {{ interface.untagged_vlan.vid }}
 {% endif %}
