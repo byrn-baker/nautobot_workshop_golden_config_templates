@@ -12,8 +12,8 @@ interface {{ interface["name"]["split"]('.')[0] | replace('eth', 'Ethernet')}}
 {% if '.' in addr["address"] %}
     ip address {{ addr["address"] }}
 {% elif ':' in addr["address"] %}
-    ipv6 address {{ addr["address"] }}
     ipv6 enable
+    ipv6 address {{ addr["address"] }}
 {% endif %}
 {% endif %}
 {% endfor %}
@@ -36,6 +36,5 @@ interface {{ interface["name"]["split"]('.')[0] | replace('eth', 'Ethernet')}}
 {% if interface['cf_mpls_enabled'] == True %}
     mpls ip
 {% endif %}
-    no shutdown
 !
 {% endif %}
