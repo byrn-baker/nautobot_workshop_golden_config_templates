@@ -6,7 +6,6 @@ interface {{ interface["name"]["split"]('.')[0] }}
     description To {{ interface["connected_interface"]["device"]["name"] }}-{{ interface["connected_interface"]["name"] }}
 {% endif %}
 {% if interface["ip_addresses"] | length > 1 %}
-    no switchport
 {% for addr in interface["ip_addresses"] %}
 {% if addr["address"] is defined %}
 {% if '.' in addr["address"] %}

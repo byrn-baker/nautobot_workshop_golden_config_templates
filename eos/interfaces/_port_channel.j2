@@ -7,7 +7,6 @@ interface {{ interface.name }}
 {% endif %}
 {% set valid_addrs = interface.ip_addresses | selectattr("address", "defined") | list %}
 {% if valid_addrs | length > 0 %}
-   no switchport
 {% for addr in valid_addrs %}
 {% if '.' in addr["address"] %}
    ip address {{ addr["address"] }}
@@ -30,8 +29,6 @@ interface {{ interface.name }}
 {% endif %}
 !
 {% elif interface.mode == "TAGGED" %}
-   no shutdown
-   switchport
    switchport mode trunk
    switchport trunk allowed vlan {{ interface.tagged_vlans | map(attribute='vid') | join(',') }}
 {% if interface.label == 'MLAG' %}
@@ -39,12 +36,8 @@ interface {{ interface.name }}
 {% endif %}
 !
 {% elif interface.mode == "TAGGED_ALL" %}
-   no shutdown
-   switchport
    switchport mode trunk
 {% elif interface.mode == "ACCESS" %}
-   no shutdown
-   switchport
    switchport mode access
 {% if interface.untagged_vlan.vid is defined %}
    switch access vlan {{ interface.untagged_vlan.vid }}
