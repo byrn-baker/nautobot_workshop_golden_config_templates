@@ -29,8 +29,8 @@ interface {{ interface.name }}
 {% endif %}
 !
 {% elif interface.mode == "TAGGED" %}
-   switchport mode trunk
    switchport trunk allowed vlan {{ interface.tagged_vlans | map(attribute='vid') | join(',') }}
+   switchport mode trunk
 {% if interface.label == 'MLAG' %}
    switchport trunk group MLAG
 {% endif %}
