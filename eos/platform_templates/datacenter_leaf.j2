@@ -9,7 +9,6 @@ management api http-commands
    !
    vrf clab-mgmt
       no shutdown
-   !
 !
 no service interface inactive port-id allocation disabled
 !
@@ -31,7 +30,7 @@ spanning-tree mst 0 priority 4096
 {% set suffix1 = "%02x" % cleaned %}
 {% set suffix2 = h[2:4] %}
 {% set suffix3 = h[4:6] %}
-system mac-address {{ mac }}:{{ suffix1 }}:{{ suffix2 }}:{{ suffix3 }}
+ system mac-address {{ mac }}:{{ suffix1 }}:{{ suffix2 }}:{{ suffix3 }}
 !
 system l1
    unsupported speed action error
