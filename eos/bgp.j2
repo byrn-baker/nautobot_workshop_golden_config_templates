@@ -2,37 +2,37 @@
 {% set loopback = interfaces | selectattr('name', 'equalto', 'Loopback0') | list | first %}
 {% set loopback_ip = loopback['ip_addresses'] | map(attribute='address') | map('ipaddr', 'address') | list | first %}
 router bgp {{ instance['autonomous_system']['asn'] }}
-  router-id {{ loopback_ip }}
-  no bgp default ipv4-unicast
-  maximum-paths 4 ecmp 4
+   router-id {{ loopback_ip }}
+   no bgp default ipv4-unicast
+   maximum-paths 4 ecmp 4
 {# --- Peer-group definitions --- #}
 {% for pg in instance.peer_groups %}
-  neighbor {{ pg.name }} peer group
+   neighbor {{ pg.name }} peer group
 {% if pg.source_interface is defined and pg.source_interface is not none %}
-  neighbor {{ pg.name }} update-source {{ pg.source_interface.name }}
+   neighbor {{ pg.name }} update-source {{ pg.source_interface.name }}
 {% endif %}
 {% if pg.extra_attributes is defined and pg.extra_attributes is not none %}
 {% if pg.extra_attributes.bfd is defined and pg.extra_attributes.bfd %}
-  neighbor {{ pg.name }} bfd
+   neighbor {{ pg.name }} bfd
 {% endif %}
 {% if pg.extra_attributes['ebgp-multihop'] is defined %}
-  neighbor {{ pg.name }} ebgp-multihop {{ pg.extra_attributes['ebgp-multihop'] }}
+   neighbor {{ pg.name }} ebgp-multihop {{ pg.extra_attributes['ebgp-multihop'] }}
 {% endif %}
 {% if pg.extra_attributes['next-hop-unchanged'] is defined and pg.extra_attributes['next-hop-unchanged'] %}
-  neighbor {{ pg.name }} next-hop-unchanged
+   neighbor {{ pg.name }} next-hop-unchanged
 {% endif %}
 {% if pg.extra_attributes['next-hop-self'] is defined and pg.extra_attributes['next-hop-self'] %}
-  neighbor {{ pg.name }} next-hop-self
+   neighbor {{ pg.name }} next-hop-self
 {% endif %}
 {% if pg.extra_attributes['send-community'] is defined and pg.extra_attributes['send-community'] %}
-  neighbor {{ pg.name }} send-community
+   neighbor {{ pg.name }} send-community
 {% endif %}
 {% if pg.extra_attributes['maximum-routes'] is defined %}
-  neighbor {{ pg.name }} maximum-routes {{ pg.extra_attributes['maximum-routes'] }}
+   neighbor {{ pg.name }} maximum-routes {{ pg.extra_attributes['maximum-routes'] }}
 {% endif %}
 {% endif %}
 {% if pg.secret is defined and pg.secret is not none and pg.secret.name is defined %}
-  neighbor {{ pg.name }} password 7 {{ pg.secret.name | arista.avd.encrypt(passwd_type='bgp', key=pg.name) }}
+   neighbor {{ pg.name }} password 7 {{ pg.secret.name | arista.avd.encrypt(passwd_type='bgp', key=pg.name) }}
 {% endif %}
 {% endfor %}
 {# --- Neighbor IP bindings --- #}
@@ -41,7 +41,7 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% set peer = ep.peer %}
 {% set peer_ip = peer.source_ip.address | ipaddr('address') %}
 {% if ep.peer_group is defined and ep.peer_group is not none and ep.peer_group.name is defined %}
-  neighbor {{ peer_ip }} peer group {{ ep.peer_group.name }}
+   neighbor {{ peer_ip }} peer group {{ ep.peer_group.name }}
 {% endif %}
 {% if peer.autonomous_system is defined and peer.autonomous_system is not none and peer.autonomous_system.asn is defined %}
 {% set peer_asn = peer.autonomous_system.asn %}
@@ -50,23 +50,23 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% else %}
 {% set peer_asn = 'UNKNOWN' %}
 {% endif %}
-  neighbor {{ peer_ip }} remote-as {{ peer_asn }}
+   neighbor {{ peer_ip }} remote-as {{ peer_asn }}
 {% if peer.description is defined and peer.description %}
-  neighbor {{ peer_ip }} description {{ peer.description }}
+   neighbor {{ peer_ip }} description {{ peer.description }}
 {% endif %}
 {% endif %}
 {% endfor %}
-  redistribute connected route-map RM-CONN-2-BGP
-  !
+   redistribute connected route-map RM-CONN-2-BGP
+!
 {# --- VLAN EVPN Config --- #}
 {% if role.name == "Datacenter Leaf" %}
 {% set vlans = location.vlans if location.vlans else location.parent.vlans if location.parent is defined and location.parent.vlans is defined else [] %}
 {% for vlan in vlans %}
 {% if vlan.vid is defined and "MLAG" not in vlan.name %}
-  vlan {{ vlan.vid }}
-    rd {{ loopback_ip }}:{{ "%04d" | format(vlan.vid) }}
-    route-target both 1{{ "%04d" | format(vlan.vid) }}:1{{ "%04d" | format(vlan.vid) }}
-    redistribute learned
+   vlan {{ vlan.vid }}
+      rd {{ loopback_ip }}:{{ "%04d" | format(vlan.vid) }}
+      route-target both 1{{ "%04d" | format(vlan.vid) }}:1{{ "%04d" | format(vlan.vid) }}
+      redistribute learned
 {% endif %}
 {% endfor %}
 {% endif %}
@@ -79,19 +79,19 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% set ordered_afi_codes = ['L2_EVPN', 'IPV4_UNICAST', 'IPV6_UNICAST'] %}
 {% for afi_code in ordered_afi_codes if afi_code in all_afis %}
 {% set afi_safi = afi_map[afi_code] %}
-  address-family {{ afi_safi }}
+   address-family {{ afi_safi }}
 {% for pg in instance.peer_groups %}
 {% set afis = pg.address_families | selectattr('afi_safi', 'equalto', afi_code) | list %}
 {% if afis | length > 0 %}
-    neighbor {{ pg.name }} activate
+   neighbor {{ pg.name }} activate
 {% if afis[0].import_policy is defined and afis[0].import_policy %}
-    neighbor {{ pg.name }} route-map {{ afis[0].import_policy }} in
+   neighbor {{ pg.name }} route-map {{ afis[0].import_policy }} in
 {% endif %}
 {% if afis[0].export_policy is defined and afis[0].export_policy %}
-    neighbor {{ pg.name }} route-map {{ afis[0].export_policy }} out
+   neighbor {{ pg.name }} route-map {{ afis[0].export_policy }} out
 {% endif %}
 {% elif afi_safi == 'ipv4' %}
-    no neighbor {{ pg.name }} activate
+   no neighbor {{ pg.name }} activate
 {% endif %}
 {% endfor %}
 {% for ep in instance.endpoints %}
@@ -101,18 +101,18 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% if peer.address_families is defined %}
 {% for af in peer.address_families %}
 {% if afi_map[af.afi_safi] == afi_safi %}
-    neighbor {{ peer_ip }} activate
+   neighbor {{ peer_ip }} activate
 {% if afis[0].import_policy is defined and afis[0].import_policy %}
-    neighbor {{ pg.name }} route-map {{ afis[0].import_policy }} in
+   neighbor {{ pg.name }} route-map {{ afis[0].import_policy }} in
 {% endif %}
 {% if afis[0].export_policy is defined and afis[0].export_policy %}
-    neighbor {{ pg.name }} route-map {{ afis[0].export_policy }} out
+   neighbor {{ pg.name }} route-map {{ afis[0].export_policy }} out
 {% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
 {% endif %}
 {% endfor %}
-  !
+!
 {% endfor %}
 {% endfor %}

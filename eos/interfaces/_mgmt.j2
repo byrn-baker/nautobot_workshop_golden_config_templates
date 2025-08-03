@@ -1,14 +1,14 @@
 interface {{ interface["name"] }}
 {% if interface["description"] | length > 1 %}
-    description {{ interface["description"] }}
+   description {{ interface["description"] }}
 {% else %}
-    description MGMT ONLY INTERFACE   
+   description MGMT ONLY INTERFACE   
 {% endif %}
-    vrf clab-mgmt
+   vrf clab-mgmt
 {% if interface["ip_addresses"] | length > 0 %}
 {% for addr in interface["ip_addresses"] %}
 {% if addr["address"] is defined %}
-    ip address {{ addr["address"] | ipaddr('address') }} {{ addr.address | ipaddr('netmask') }}
+   ip address {{ addr["address"] | ipaddr('address') }} {{ addr.address | ipaddr('netmask') }}
 !
 {% endif %}
 {% endfor %}

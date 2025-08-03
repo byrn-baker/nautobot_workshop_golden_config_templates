@@ -39,7 +39,7 @@ interface {{ interface.name }}
    switchport mode trunk
 {% elif interface.mode == "ACCESS" %}
 {% if interface.untagged_vlan.vid is defined %}
-   switch access vlan {{ interface.untagged_vlan.vid }}
+   switchport access vlan {{ interface.untagged_vlan.vid }}
 {% endif %}
 {% if interface.cf_mlag_interface == true %}
    mlag {{ interface.name | replace ("Port-Channel", "") }}
