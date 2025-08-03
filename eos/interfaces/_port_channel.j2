@@ -29,31 +29,32 @@ interface {{ interface.name }}
 {% endif %}
 !
 {% elif interface.mode == "TAGGED" %}
-{%- macro compress_vlan_list(vlans) -%}
-{%- set vlans = vlans | sort %}
-{%- set ranges = [] %}
-{%- set start = vlans[0] %}
-{%- set end = start %}
-{%- for vid in vlans[1:] %}
-{%- if vid == end + 1 %}
-{%- set end = vid %}
-{%- else %}
-{%- if start == end %}
-   {{- ranges.append(start|string) }}
-{%- else %}
-   {{- ranges.append(start|string ~ '-' ~ end|string) }}
-{%- endif %}
-{%- set start = vid %}
-{%- set end = vid %}
-{%- endif %}
-{%- endfor %}
-{%- if start == end %}
-{{- ranges.append(start|string) }}
-{%- else %}
-{{- ranges.append(start|string ~ '-' ~ end|string) }}
-{%- endif %}
-{{ ranges | join(',') }}
-{%- endmacro %}
+{% macro compress_vlan_list(vlans) -%}
+{% set vlans = vlans | map('int') | sort %}
+{% set result = "" %}
+{% set start = vlans[0] %}
+{% set end = start %}
+{% for vid in vlans[1:] %}
+{% if vid == end + 1 %}
+{% set end = vid %}
+{% else %}
+{% if result != "" %},{% endif %}
+{% if start == end -%}
+{% set result = result ~ start %}
+{% else -%}
+{% set result = result ~ start ~ '-' ~ end %}
+{% endif %}
+{% set start = vid %}
+{% set end = vid %}
+{% endif %}
+{% endfor %}
+{% if result != "" %},{% endif %}
+{% if start == end -%}
+{{ result ~ start }}
+{% else -%}
+{{ result ~ start ~ '-' ~ end }}
+{% endif %}
+{% endmacro %}
    switchport trunk allowed vlan {{ compress_vlan_list(interface.tagged_vlans | map(attribute='vid') | list) }}
    switchport mode trunk
 {% if interface.label == 'MLAG' %}
