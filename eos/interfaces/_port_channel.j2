@@ -30,32 +30,36 @@ interface {{ interface.name }}
 !
 {% elif interface.mode == "TAGGED" %}
 {% macro compress_vlan_list(vlans) -%}
-{% set vlans = vlans | map('int') | sort %}
-{% set result = "" %}
+{% set vlans = vlans | map(attribute='vid') | map('int') | sort %}
+{% set output = "" %}
 {% set start = vlans[0] %}
 {% set end = start %}
 {% for vid in vlans[1:] %}
 {% if vid == end + 1 %}
 {% set end = vid %}
 {% else %}
-{% if result != "" %},{% endif %}
-{% if start == end -%}
-{% set result = result ~ start %}
-{% else -%}
-{% set result = result ~ start ~ '-' ~ end %}
+{% if output != "" %}
+{% set output = output ~ ',' %}
+{% endif %}
+{% if start == end %}
+{% set output = output ~ start|string %}
+{% else %}
+{% set output = output ~ start|string ~ '-' ~ end|string %}
 {% endif %}
 {% set start = vid %}
 {% set end = vid %}
 {% endif %}
 {% endfor %}
-{% if result != "" %},{% endif %}
-{% if start == end -%}
-{{ result ~ start }}
-{% else -%}
-{{ result ~ start ~ '-' ~ end }}
+{% if output != "" %}
+{% set output = output ~ ',' %}
+{% endif %}
+{% if start == end %}
+{{ output ~ start }}
+{% else %}
+{{ output ~ start ~ '-' ~ end }}
 {% endif %}
 {% endmacro %}
-   switchport trunk allowed vlan {{ compress_vlan_list(interface.tagged_vlans | map(attribute='vid') | list) }}
+   switchport trunk allowed vlan {{ compress_vlan_list(interface.tagged_vlans) }}
    switchport mode trunk
 {% if interface.label == 'MLAG' %}
    switchport trunk group MLAG
