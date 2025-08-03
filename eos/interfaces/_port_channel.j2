@@ -29,36 +29,34 @@ interface {{ interface.name }}
 {% endif %}
 !
 {% elif interface.mode == "TAGGED" %}
-{% macro compress_vlan_list(vlans) -%}
-{% set vlans = vlans | map(attribute='vid') | map('int') | sort %}
-{% set output = "" %}
-{% set start = vlans[0] %}
-{% set end = start %}
-{% for vid in vlans[1:] %}
-{% if vid == end + 1 %}
-{% set end = vid %}
-{% else %}
-{% if output != "" %}
-{% set output = output ~ ',' %}
-{% endif %}
-{% if start == end %}
-{% set output = output ~ start|string %}
-{% else %}
-{% set output = output ~ start|string ~ '-' ~ end|string %}
-{% endif %}
-{% set start = vid %}
-{% set end = vid %}
-{% endif %}
-{% endfor %}
-{% if output != "" %}
-{% set output = output ~ ',' %}
-{% endif %}
-{% if start == end %}
-{{ output ~ start }}
-{% else %}
-{{ output ~ start ~ '-' ~ end }}
-{% endif %}
-{% endmacro %}
+{%- macro compress_vlan_list(vlans) -%}
+  {%- set vids = vlans | map(attribute='vid') | map('int') | sort %}
+  {%- set ns = namespace(output='', start=vids[0], end=vids[0]) %}
+  {%- for vid in vids[1:] %}
+    {%- if vid == ns.end + 1 %}
+      {%- set ns.end = vid %}
+    {%- else %}
+      {%- if ns.output != '' %}
+        {%- set ns.output = ns.output ~ ',' %}
+      {%- endif %}
+      {%- if ns.start == ns.end %}
+        {%- set ns.output = ns.output ~ ns.start %}
+      {%- else %}
+        {%- set ns.output = ns.output ~ ns.start ~ '-' ~ ns.end %}
+      {%- endif %}
+      {%- set ns.start = vid %}
+      {%- set ns.end = vid %}
+    {%- endif %}
+  {%- endfor %}
+  {%- if ns.output != '' %}
+    {%- set ns.output = ns.output ~ ',' %}
+  {%- endif %}
+  {%- if ns.start == ns.end %}
+    {{ ns.output ~ ns.start }}
+  {%- else %}
+    {{ ns.output ~ ns.start ~ '-' ~ ns.end }}
+  {%- endif %}
+{%- endmacro %}
    switchport trunk allowed vlan {{ compress_vlan_list(interface.tagged_vlans) }}
    switchport mode trunk
 {% if interface.label == 'MLAG' %}
