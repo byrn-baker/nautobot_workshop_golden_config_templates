@@ -29,7 +29,32 @@ interface {{ interface.name }}
 {% endif %}
 !
 {% elif interface.mode == "TAGGED" %}
-   switchport trunk allowed vlan {{ interface.tagged_vlans | map(attribute='vid') | join(',') }}
+{%- macro compress_vlan_list(vlans) -%}
+{%- set vlans = vlans | sort %}
+{%- set ranges = [] %}
+{%- set start = vlans[0] %}
+{%- set end = start %}
+{%- for vid in vlans[1:] %}
+{%- if vid == end + 1 %}
+{%- set end = vid %}
+{%- else %}
+{%- if start == end %}
+   {{- ranges.append(start|string) }}
+{%- else %}
+   {{- ranges.append(start|string ~ '-' ~ end|string) }}
+{%- endif %}
+{%- set start = vid %}
+{%- set end = vid %}
+{%- endif %}
+{%- endfor %}
+{%- if start == end %}
+{{- ranges.append(start|string) }}
+{%- else %}
+{{- ranges.append(start|string ~ '-' ~ end|string) }}
+{%- endif %}
+{{ ranges | join(',') }}
+{%- endmacro %}
+   switchport trunk allowed vlan {{ compress_vlan_list(interface.tagged_vlans | map(attribute='vid') | list) }}
    switchport mode trunk
 {% if interface.label == 'MLAG' %}
    switchport trunk group MLAG
