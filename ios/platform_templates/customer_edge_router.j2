@@ -46,7 +46,7 @@ ipv6 cef
 !
 !
 !
-{% if config_context['mpls']['enabled'] is defined and config_context['mpls']['enabled'] == True %}
+{% if config_context['mpls'] is defined and config_context['mpls']['enabled'] == True %}
 {% set mpls = config_context['mpls'] %}
 {% if mpls['ldp']['enabled'] == True %}
 mpls label protocol ldp
