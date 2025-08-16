@@ -15,15 +15,19 @@ router bgp {{ instance['autonomous_system']['asn'] }}
  neighbor {{ pg['name'] }} remote-as {{ pg_asn }}
 {% endif %}
 {% endfor %}
-{# Split endpoints IPv6 first, then IPv4 #}
+{# Split endpoints with de-dup by neighbor IP: IPv6 first, then IPv4 #}
 {% set eps_v6 = [] %}
 {% set eps_v4 = [] %}
+{% set seen_ips = [] %}
 {% for ep in instance['endpoints'] %}
 {% set raw_ip = ep['peer']['source_ip']['address'] | ipaddr('address') %}
+{% if raw_ip not in seen_ips %}
+{% set _ = seen_ips.append(raw_ip) %}
 {% if ":" in raw_ip %}
 {% set _ = eps_v6.append(ep) %}
 {% else %}
 {% set _ = eps_v4.append(ep) %}
+{% endif %}
 {% endif %}
 {% endfor %}
 {# Per-neighbor base config (global context) #}
@@ -70,29 +74,26 @@ router bgp {{ instance['autonomous_system']['asn'] }}
  !
 {% for afi in ordered_afis %}
  address-family {{ 'ipv4' if afi == 'IPV4_UNICAST' else 'ipv6' }}
-{# Peer-group AF-level settings (no activate at PG level) #}
+{# Peer-group AF-level route-maps and extras (no activate at PG level) #}
 {% for pg in (instance.get('peer_groups', []) | sort(attribute='name')) %}
-{% for pg_af in pg.get('address_families', []) %}
-{% if pg_af['afi_safi'] == afi %}
+{% for pg_af in pg.get('address_families', []) if pg_af['afi_safi'] == afi %}
 {% if pg_af.get('import_policy') %}
   neighbor {{ pg['name'] }} route-map {{ pg_af['import_policy'] }} in
 {% endif %}
 {% if pg_af.get('export_policy') %}
   neighbor {{ pg['name'] }} route-map {{ pg_af['export_policy'] }} out
 {% endif %}
-{% if pg_af.get('extra_attributes') %}
-{% for key, value in pg_af.extra_attributes.items() %}
+{% set extras = pg_af.get('extra_attributes', {}) %}
+{% for key, value in extras.items() %}
 {% if value is sameas true %}
   neighbor {{ pg['name'] }} {{ key }}
 {% elif value is string %}
   neighbor {{ pg['name'] }} {{ key }} {{ value }}
 {% endif %}
 {% endfor %}
-{% endif %}
-{% endif %}
 {% endfor %}
 {% endfor %}
-{# Per-neighbor activation only, IPv6 neighbors first for consistency #}
+{# Per-neighbor activation only, using de-duped list #}
 {% for ep in eps_v6 + eps_v4 %}
 {% set peer = ep['peer'] %}
 {% set raw_ip = peer['source_ip']['address'] | ipaddr('address') %}
