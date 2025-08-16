@@ -3,6 +3,7 @@
 {% include "/ios/interfaces/_loopback.j2" %}
 {% endif %}
 {% endfor %}
+
 {% for interface in interfaces %}
 {% if 'Loop' not in interface["name"] and role["name"] == "Provider Router" %}
 {% include "/ios/interfaces/_router_physical.j2"%}
