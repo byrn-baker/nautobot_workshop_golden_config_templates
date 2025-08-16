@@ -1,20 +1,16 @@
-{# Build two ordered lists: loopbacks first, then others #}
-{% set loopbacks = [] %}
-{% set others = [] %}
-{% for interface in interfaces | sort(attribute='name') %}
-  {% if interface['name'] is match('^Loopback') %}
-    {% set _ = loopbacks.append(interface) %}
-  {% else %}
-    {% set _ = others.append(interface) %}
-  {% endif %}
+{% for interface in interfaces %}
+{% if 'Loop' in interface["name"] %}
+{% include "/ios/interfaces/_loopback.j2" %}
+{% endif %}
 {% endfor %}
-{# Render loopbacks first #}
-{% for interface in loopbacks %}
-  {% include "/ios/interfaces/_loopback.j2" %}
-{% endfor %}
-{# Then render the rest (your role checks all map to the same include) #}
-{% for interface in others %}
-  {% if role["name"] in ["Provider Router","Provider Edge Router","Customer Edge Router","Provider Route Reflector"] %}
-    {% include "/ios/interfaces/_router_physical.j2" %}
-  {% endif %}
+{% for interface in interfaces %}
+{% if 'Loop' not in interface["name"] and role["name"] == "Provider Router" %}
+{% include "/ios/interfaces/_router_physical.j2"%}
+{% elif 'Loop' not in interface["name"] and role["name"] == "Provider Edge Router" %}
+{% include "/ios/interfaces/_router_physical.j2"%}
+{% elif 'Loop' not in interface["name"] and role["name"] == "Customer Edge Router" %}
+{% include "/ios/interfaces/_router_physical.j2"%}
+{% elif 'Loop' not in interface["name"] and role["name"] == "Provider Route Reflector" %}
+{% include "/ios/interfaces/_router_physical.j2"%}
+{% endif %}
 {% endfor %}
