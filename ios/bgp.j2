@@ -83,14 +83,16 @@ router bgp {{ instance['autonomous_system']['asn'] }}
 {% if pg_af.get('export_policy') %}
   neighbor {{ pg['name'] }} route-map {{ pg_af['export_policy'] }} out
 {% endif %}
-{% set extras = pg_af.get('extra_attributes', {}) %}
-{% for key, value in extras.items() %}
+{% set extras = pg_af.get('extra_attributes') or {} %}
+{% if extras %}
+{% for key, value in extras|dictsort %}
 {% if value is sameas true %}
   neighbor {{ pg['name'] }} {{ key }}
 {% elif value is string %}
   neighbor {{ pg['name'] }} {{ key }} {{ value }}
 {% endif %}
 {% endfor %}
+{% endif %}
 {% endfor %}
 {% endfor %}
 {# Per-neighbor activation only, using de-duped list #}
