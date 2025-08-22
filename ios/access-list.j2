@@ -3,13 +3,13 @@
 {% if item.afi == 'ipv4' and item.type == 'extended' %}
 ip access-list extended {{ item.name }}
 {% for entry in item.entries %}
-  {% set source_addr = entry.source | ipaddr('address') %}
-  {% set source_mask = entry.source | ipaddr('hostmask') if entry.source != 'any' else '' %}
-  {% set source_str = source_addr if entry.source == 'any' else source_addr ~ ' ' ~ source_mask %}
-  {% set dest_addr = entry.destination | ipaddr('address') %}
-  {% set dest_mask = entry.destination | ipaddr('hostmask') if entry.destination != 'any' else '' %}
-  {% set dest_str = dest_addr if entry.destination == 'any' else dest_addr ~ ' ' ~ dest_mask %}
-  {% set options = ' log' if entry.get('log', false) else '' %}
+{% set source_addr = entry.source | ipaddr('address') %}
+{% set source_mask = entry.source | ipaddr('hostmask') if entry.source != 'any' else '' %}
+{% set source_str = source_addr if entry.source == 'any' else source_addr ~ ' ' ~ source_mask %}
+{% set dest_addr = entry.destination | ipaddr('address') %}
+{% set dest_mask = entry.destination | ipaddr('hostmask') if entry.destination != 'any' else '' %}
+{% set dest_str = dest_addr if entry.destination == 'any' else dest_addr ~ ' ' ~ dest_mask %}
+{% set options = ' log' if entry.get('log', false) else '' %}
  {{ entry.seq }} {{ entry.action }} {{ entry.protocol }} {{ source_str }} {{ dest_str }}{{ options }}
 {% endfor %}
 {% endif %}
