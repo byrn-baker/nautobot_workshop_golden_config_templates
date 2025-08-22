@@ -1,7 +1,6 @@
 {# Render ACLs if present in Config Context #}
-{% if config_context.acl %}
 {% for item in config_context.acl %}
-{% if item.afi == 'ipv4' %}
+{% if item.afi == 'ipv4' and item.type == 'extended' %}
 ip access-list extended {{ item.name }}
 {% for entry in item.entries %}
   {% set source_addr = entry.source | ipaddr('address') %}
@@ -10,9 +9,8 @@ ip access-list extended {{ item.name }}
   {% set dest_addr = entry.destination | ipaddr('address') %}
   {% set dest_mask = entry.destination | ipaddr('hostmask') if entry.destination != 'any' else '' %}
   {% set dest_str = dest_addr if entry.destination == 'any' else dest_addr ~ ' ' ~ dest_mask %}
-  {% set options = ' log' if entry.log else '' %}
+  {% set options = ' log' if entry.get('log', false) else '' %}
  {{ entry.seq }} {{ entry.action }} {{ entry.protocol }} {{ source_str }} {{ dest_str }}{{ options }}
 {% endfor %}
 {% endif %}
 {% endfor %}
-{% endif %}
