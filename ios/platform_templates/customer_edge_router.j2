@@ -106,6 +106,9 @@ ip ssh bulk-mode 131072
 {% if config_context['prefix_lists'] is defined %}
 {% include '/ios/prefix_list-ipv4.j2' %}
 {% endif %}
+{% if config_context['acl'] is defined %}
+{% include '/ios/access-list.j2' %}
+{% endif %}
 ipv6 route vrf clab-mgmt ::/0 Ethernet0/0
 {% if config_context['ospf'] is defined %}
 {% include '/ios/ospf-ipv6.j2' %}
