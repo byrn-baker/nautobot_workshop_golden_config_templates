@@ -1,0 +1,12 @@
+{# Render ACLs if present in Config Context #}
+{% if acl %}
+{% for item in acl %}
+{% if item.afi == 'ipv4' %}
+ip access-list extended {{ item.name }}
+{% for entry in item.entries %}
+ {% set prefix = entry.permit %}
+ {{ entry.seq }} permit ip {{ prefix | ipaddr('address') }} {{ prefix | ipaddr('hostmask') }} any
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
